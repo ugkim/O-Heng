@@ -6,6 +6,7 @@ import { DEFAULT_MAP_KEY, getMapDefinition } from '../data/maps'
 import { attackMonster, findMonsterInRange } from '../systems/combatSystem'
 import { addExperience } from '../systems/levelSystem'
 import { updateCharacterState } from '../../services/characterService'
+import { fetchMapByKey } from '../../services/mapService'
 import { resolveCharacterSprite } from '../../data/spriteMap'
 import {
   getSelectedCharacter,
@@ -73,7 +74,9 @@ export default class FieldScene extends Phaser.Scene {
   }
 
   update() {
+    const portalUpPressed = this.consumePortalUpPressed()
     this.updatePlayerMovement()
+    this.updatePortalInteraction(portalUpPressed)
     this.updateHud()
   }
 
@@ -230,9 +233,6 @@ export default class FieldScene extends Phaser.Scene {
     this.player.body.setDragX(1400)
 
     this.playerPlatformCollider = this.physics.add.collider(this.player, this.platforms)
-    this.physics.add.overlap(this.player, this.portals, (_player, portal) => {
-      this.enterPortal(portal.mapPortal)
-    })
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08)
   }
 
@@ -438,25 +438,27 @@ export default class FieldScene extends Phaser.Scene {
 
   createMonster(monsterId, mapMonsterConfig, spawnPoint) {
     const baseMonsterData = MONSTER_DEFINITIONS[monsterId]
-    if (!baseMonsterData) return null
+    if (!baseMonsterData && !mapMonsterConfig?.name) return null
 
-    const maxHp = mapMonsterConfig.hp ?? mapMonsterConfig.maxHp ?? baseMonsterData.maxHp
+    const maxHp = mapMonsterConfig.hp ?? mapMonsterConfig.maxHp ?? baseMonsterData?.maxHp ?? 30
+    const element = mapMonsterConfig.element || baseMonsterData?.element || 'neutral'
     const monster = {
-      ...baseMonsterData,
+      ...(baseMonsterData || {}),
       id: monsterId,
-      element: mapMonsterConfig.element || baseMonsterData.element || 'neutral',
+      name: mapMonsterConfig.name || baseMonsterData?.name || monsterId,
+      element,
       maxHp,
-      attack: mapMonsterConfig.attack ?? baseMonsterData.attack ?? 0,
-      defense: mapMonsterConfig.defense ?? baseMonsterData.defense ?? 0,
-      exp: mapMonsterConfig.exp ?? baseMonsterData.exp ?? 0,
-      gold: mapMonsterConfig.gold ?? baseMonsterData.gold ?? 0,
+      attack: mapMonsterConfig.attack ?? baseMonsterData?.attack ?? 0,
+      defense: mapMonsterConfig.defense ?? baseMonsterData?.defense ?? 0,
+      exp: mapMonsterConfig.exp ?? baseMonsterData?.exp ?? 0,
+      gold: mapMonsterConfig.gold ?? baseMonsterData?.gold ?? 0,
       dropItems: mapMonsterConfig.dropItems || [],
       currentHp: maxHp,
       body: this.add.circle(
         spawnPoint.x,
         spawnPoint.y,
         mapMonsterConfig.radius || 24,
-        MONSTER_COLORS[mapMonsterConfig.element || baseMonsterData.element || 'neutral'] || MONSTER_COLORS.neutral,
+        MONSTER_COLORS[element] || MONSTER_COLORS.neutral,
       ),
       nameText: null,
       hpText: null,
@@ -505,6 +507,7 @@ export default class FieldScene extends Phaser.Scene {
     // 키보드 입력과 동일한 updatePlayerMovement()에서 함께 읽는다.
     this.virtualInput = {
       up: false,
+      upQueued: false,
       down: false,
       left: false,
       right: false,
@@ -525,6 +528,10 @@ export default class FieldScene extends Phaser.Scene {
       }
 
       if (!(control in this.virtualInput)) return
+
+      if (control === 'up' && type === 'start') {
+        this.virtualInput.upQueued = true
+      }
 
       this.virtualInput[control] = type === 'start'
     }
@@ -713,6 +720,53 @@ export default class FieldScene extends Phaser.Scene {
     this.player.play(this.getAnimationKey('idle'), true)
   }
 
+  consumePortalUpPressed() {
+    if (!this.cursors || !this.keys || !this.virtualInput) return false
+
+    const upPressed =
+      Phaser.Input.Keyboard.JustDown(this.cursors.up) ||
+      Phaser.Input.Keyboard.JustDown(this.keys.up) ||
+      this.virtualInput.upQueued
+
+    this.virtualInput.upQueued = false
+    return upPressed
+  }
+
+  updatePortalInteraction(upPressed) {
+    const portalData = this.findCurrentPortal()
+
+    if (!portalData) {
+      this.activePortalId = null
+      return
+    }
+
+    if (this.activePortalId !== portalData.id) {
+      this.activePortalId = portalData.id
+      this.showFloatingText(this.player.x, this.player.y - 86, '위 키로 이동', '#d8fff7')
+    }
+
+    if (upPressed) {
+      this.enterPortal(portalData)
+    }
+  }
+
+  findCurrentPortal() {
+    const body = this.player?.body
+    if (!body) return null
+
+    const centerX = body.x + body.width / 2
+    const centerY = body.y + body.height / 2
+
+    return (this.mapData.portals || []).find((portal) => {
+      const left = portal.x - portal.width / 2
+      const right = portal.x + portal.width / 2
+      const top = portal.y - portal.height / 2
+      const bottom = portal.y + portal.height / 2
+
+      return centerX >= left && centerX <= right && centerY >= top && centerY <= bottom
+    })
+  }
+
   updatePlayerAnimation(onGround) {
     if (this.isPlayerAttacking) return
 
@@ -736,19 +790,39 @@ export default class FieldScene extends Phaser.Scene {
     this.showFloatingText(this.player.x, this.player.y - 72, 'RESPAWN', '#8fd3ff')
   }
 
-  enterPortal(portalData) {
+  async enterPortal(portalData) {
     if (!portalData || this.isEnteringPortal) return
 
     this.isEnteringPortal = true
+    const targetMapKey = portalData.targetMapKey || portalData.targetMapId
 
-    if (getMapDefinition(portalData.targetMapKey)?.mapKey === portalData.targetMapKey) {
-      const targetMap = getMapDefinition(portalData.targetMapKey)
+    try {
+      const targetMap = await fetchMapByKey(targetMapKey)
       const targetSpawn =
         targetMap.spawns?.find((spawn) => spawn.id === portalData.targetSpawnId) ||
-        portalData.targetSpawnPoint
+        portalData.targetSpawnPoint ||
+        targetMap.spawnPoint
 
       this.scene.restart({
-        mapKey: portalData.targetMapKey,
+        mapKey: targetMap.mapKey || targetMapKey,
+        mapData: targetMap,
+        spawnPoint: targetSpawn,
+      })
+      return
+    } catch (error) {
+      console.error('맵 이동 실패:', error)
+    }
+
+    if (getMapDefinition(targetMapKey)?.mapKey === targetMapKey) {
+      const targetMap = getMapDefinition(targetMapKey)
+      const targetSpawn =
+        targetMap.spawns?.find((spawn) => spawn.id === portalData.targetSpawnId) ||
+        portalData.targetSpawnPoint ||
+        targetMap.spawnPoint
+
+      this.scene.restart({
+        mapKey: targetMapKey,
+        mapData: targetMap,
         spawnPoint: targetSpawn,
       })
       return

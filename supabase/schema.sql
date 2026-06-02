@@ -460,6 +460,118 @@ set name = excluded.name,
     portals = excluded.portals,
     background = excluded.background;
 
+insert into public.map (
+  map_key,
+  map_id,
+  name,
+  map_name,
+  width,
+  height,
+  spawn_point,
+  floor_data,
+  platforms,
+  ladders,
+  portals,
+  spawns,
+  monster_spawn_areas,
+  monster_config,
+  background
+)
+values (
+  'forest02',
+  'forest02',
+  '바람숲 깊은 길',
+  '바람숲 깊은 길',
+  2000,
+  720,
+  '{"id":"spawn-left","x":130,"y":560}'::jsonb,
+  '{
+    "platforms": [
+      {"id":"forest02-BL-ground-01","x":250,"y":610,"width":500,"height":36},
+      {"id":"forest02-BC-ground-01","x":810,"y":610,"width":420,"height":36},
+      {"id":"forest02-BR-ground-01","x":1430,"y":610,"width":560,"height":36},
+      {"id":"forest02-FR-ground-01","x":1870,"y":610,"width":220,"height":36},
+      {"id":"forest02-ML-platform-01","x":430,"y":500,"width":260,"height":24},
+      {"id":"forest02-MC-platform-01","x":910,"y":450,"width":300,"height":24},
+      {"id":"forest02-MR-platform-01","x":1390,"y":495,"width":300,"height":24},
+      {"id":"forest02-TL-platform-01","x":300,"y":350,"width":220,"height":22},
+      {"id":"forest02-TC-platform-01","x":980,"y":310,"width":260,"height":22},
+      {"id":"forest02-TR-platform-01","x":1570,"y":340,"width":260,"height":22},
+      {"id":"forest02-MC-bridge-01","x":1170,"y":405,"width":220,"height":18}
+    ]
+  }'::jsonb,
+  '[
+    {"id":"forest02-BL-ground-01","x":250,"y":610,"width":500,"height":36},
+    {"id":"forest02-BC-ground-01","x":810,"y":610,"width":420,"height":36},
+    {"id":"forest02-BR-ground-01","x":1430,"y":610,"width":560,"height":36},
+    {"id":"forest02-FR-ground-01","x":1870,"y":610,"width":220,"height":36},
+    {"id":"forest02-ML-platform-01","x":430,"y":500,"width":260,"height":24},
+    {"id":"forest02-MC-platform-01","x":910,"y":450,"width":300,"height":24},
+    {"id":"forest02-MR-platform-01","x":1390,"y":495,"width":300,"height":24},
+    {"id":"forest02-TL-platform-01","x":300,"y":350,"width":220,"height":22},
+    {"id":"forest02-TC-platform-01","x":980,"y":310,"width":260,"height":22},
+    {"id":"forest02-TR-platform-01","x":1570,"y":340,"width":260,"height":22},
+    {"id":"forest02-MC-bridge-01","x":1170,"y":405,"width":220,"height":18}
+  ]'::jsonb,
+  '[
+    {"id":"forest02-BL-ladder-01","x":520,"y":500,"width":32,"height":110,"from":"forest02-BL-ground-01","to":"forest02-ML-platform-01"},
+    {"id":"forest02-MC-ladder-01","x":1010,"y":310,"width":32,"height":140,"from":"forest02-MC-platform-01","to":"forest02-TC-platform-01"},
+    {"id":"forest02-BR-ladder-01","x":1480,"y":495,"width":32,"height":115,"from":"forest02-BR-ground-01","to":"forest02-MR-platform-01"}
+  ]'::jsonb,
+  '[
+    {"id":"forest02-BL-portal-prev","name":"바람숲 입구","x":70,"y":550,"width":44,"height":96,"targetMapId":"forest01","targetSpawnId":"spawn-right"}
+  ]'::jsonb,
+  '[
+    {"id":"spawn-left","x":130,"y":560},
+    {"id":"spawn-center","x":960,"y":560},
+    {"id":"spawn-right","x":1840,"y":560}
+  ]'::jsonb,
+  '[
+    {"id":"forest02-BL-mob-01","platformId":"forest02-BL-ground-01","monsterType":"slime","maxCount":4,"spawnChance":100,"spawnRange":{"x1":120,"x2":470}},
+    {"id":"forest02-MC-mob-01","platformId":"forest02-MC-platform-01","monsterType":"slime","maxCount":3,"spawnChance":100,"spawnRange":{"x1":780,"x2":1040}},
+    {"id":"forest02-BR-mob-01","platformId":"forest02-BR-ground-01","monsterType":"blue_dragon_wood","maxCount":2,"spawnChance":55,"spawnRange":{"x1":1210,"x2":1700}}
+  ]'::jsonb,
+  '{
+    "slime": {
+      "hp": 48,
+      "attack": 8,
+      "defense": 2,
+      "exp": 16,
+      "element": "neutral",
+      "dropItems": [
+        {"itemId":"money","name":"돈","chance":100,"amountMin":3,"amountMax":7}
+      ]
+    },
+    "blue_dragon_wood": {
+      "hp": 220,
+      "attack": 28,
+      "defense": 13,
+      "exp": 64,
+      "element": "wood",
+      "dropItems": [
+        {"itemId":"money","name":"돈","chance":100,"amountMin":18,"amountMax":32},
+        {"itemId":"blue_scale","name":"푸른 비늘","chance":25,"amountMin":1,"amountMax":1}
+      ]
+    }
+  }'::jsonb,
+  '{"skyColor":"#5f93b8","farTreeColor":"#24546a","treeColor":"#174736","groundColor":"#493620","platformColor":"#5d422d","surfaceColor":"#63b85e","borderColor":"#243f32"}'::jsonb
+)
+on conflict (map_key) do update
+set map_id = excluded.map_id,
+    map_name = excluded.map_name,
+    name = excluded.name,
+    width = excluded.width,
+    height = excluded.height,
+    spawn_point = excluded.spawn_point,
+    floor_data = excluded.floor_data,
+    platforms = excluded.platforms,
+    ladders = excluded.ladders,
+    portals = excluded.portals,
+    spawns = excluded.spawns,
+    monster_spawn_areas = excluded.monster_spawn_areas,
+    monster_config = excluded.monster_config,
+    background = excluded.background;
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
