@@ -22,6 +22,7 @@ const account = ref(getStoredAccount())
 const isCharacterHudOpen = ref(true)
 const spendingElementKey = ref('')
 const elementSpendMessage = ref('')
+const dragPadKnobStyle = ref({})
 const selectedSpriteKey = computed(() =>
   selectedCharacter.value ? getCharacterSpriteKey(selectedCharacter.value) : '',
 )
@@ -31,6 +32,12 @@ const characterStats = computed(() =>
 )
 let phaserGame = null
 let handleCharacterUpdated = null
+let dragPointerId = null
+let dragOrigin = { x: 0, y: 0 }
+let dragControls = new Set()
+
+const DRAG_DEAD_ZONE = 18
+const DRAG_KNOB_LIMIT = 34
 
 function sendGameControl(type, control) {
   // 모바일 터치 UI는 Vue 영역에 두고, Phaser에는 커스텀 이벤트만 전달한다.
@@ -52,6 +59,64 @@ function endControl(control) {
 
 function attack() {
   sendGameControl('attack', 'attack')
+}
+
+function syncDragControls(nextControls) {
+  const directionalControls = ['left', 'right', 'up', 'down']
+
+  directionalControls.forEach((control) => {
+    const isActive = dragControls.has(control)
+    const shouldBeActive = nextControls.has(control)
+
+    if (isActive !== shouldBeActive) {
+      sendGameControl(shouldBeActive ? 'start' : 'end', control)
+    }
+  })
+
+  dragControls = nextControls
+}
+
+function updateDragPad(clientX, clientY) {
+  const dx = clientX - dragOrigin.x
+  const dy = clientY - dragOrigin.y
+  const nextControls = new Set()
+
+  if (Math.abs(dx) > DRAG_DEAD_ZONE) {
+    nextControls.add(dx < 0 ? 'left' : 'right')
+  }
+
+  if (Math.abs(dy) > DRAG_DEAD_ZONE) {
+    nextControls.add(dy < 0 ? 'up' : 'down')
+  }
+
+  const knobX = Math.max(-DRAG_KNOB_LIMIT, Math.min(DRAG_KNOB_LIMIT, dx))
+  const knobY = Math.max(-DRAG_KNOB_LIMIT, Math.min(DRAG_KNOB_LIMIT, dy))
+  dragPadKnobStyle.value = {
+    transform: `translate(${knobX}px, ${knobY}px)`,
+  }
+
+  syncDragControls(nextControls)
+}
+
+function startDragPad(event) {
+  dragPointerId = event.pointerId
+  dragOrigin = { x: event.clientX, y: event.clientY }
+  event.currentTarget.setPointerCapture?.(event.pointerId)
+  updateDragPad(event.clientX, event.clientY)
+}
+
+function moveDragPad(event) {
+  if (dragPointerId !== event.pointerId) return
+  updateDragPad(event.clientX, event.clientY)
+}
+
+function endDragPad(event) {
+  if (dragPointerId !== event.pointerId) return
+
+  event.currentTarget.releasePointerCapture?.(event.pointerId)
+  dragPointerId = null
+  dragPadKnobStyle.value = {}
+  syncDragControls(new Set())
 }
 
 async function spendElementPoint(elementKey) {
@@ -125,6 +190,7 @@ onBeforeUnmount(() => {
   // destroy(true)는 Phaser가 만든 canvas DOM까지 함께 제거한다.
   phaserGame?.destroy(true)
   phaserGame = null
+  syncDragControls(new Set())
   if (handleCharacterUpdated) {
     window.removeEventListener('character-updated', handleCharacterUpdated)
     handleCharacterUpdated = null
@@ -208,7 +274,22 @@ onBeforeUnmount(() => {
       </aside>
 
       <div class="mobile-controls" aria-label="모바일 조작">
-        <div class="d-pad" aria-label="이동">
+        <div
+          class="drag-pad"
+          role="application"
+          aria-label="드래그 이동"
+          @pointerdown.prevent="startDragPad"
+          @pointermove.prevent="moveDragPad"
+          @pointerup.prevent="endDragPad"
+          @pointercancel.prevent="endDragPad"
+          @pointerleave.prevent="endDragPad"
+        >
+          <span class="drag-pad-axis horizontal" aria-hidden="true"></span>
+          <span class="drag-pad-axis vertical" aria-hidden="true"></span>
+          <span class="drag-pad-knob" :style="dragPadKnobStyle" aria-hidden="true"></span>
+        </div>
+
+        <div class="action-buttons" aria-label="액션">
           <button
             class="control-button jump"
             type="button"
@@ -220,33 +301,10 @@ onBeforeUnmount(() => {
           >
             ↑
           </button>
-          <button
-            class="control-button left"
-            type="button"
-            aria-label="왼쪽 이동"
-            @pointerdown.prevent="startControl('left')"
-            @pointerup.prevent="endControl('left')"
-            @pointercancel.prevent="endControl('left')"
-            @pointerleave.prevent="endControl('left')"
-          >
-            ←
-          </button>
-          <button
-            class="control-button right"
-            type="button"
-            aria-label="오른쪽 이동"
-            @pointerdown.prevent="startControl('right')"
-            @pointerup.prevent="endControl('right')"
-            @pointercancel.prevent="endControl('right')"
-            @pointerleave.prevent="endControl('right')"
-          >
-            →
+          <button class="attack-button" type="button" aria-label="공격" @pointerdown.prevent="attack">
+            ATK
           </button>
         </div>
-
-        <button class="attack-button" type="button" aria-label="공격" @pointerdown.prevent="attack">
-          공격
-        </button>
       </div>
     </section>
   </main>

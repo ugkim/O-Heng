@@ -487,9 +487,9 @@ input:focus {
 }
 
 .control-button,
-.attack-button {
+.attack-button,
+.drag-pad {
   border: 1px solid #48677f;
-  border-radius: 8px;
   color: #ffffff;
   background: #1c2b3a;
   font: inherit;
@@ -499,8 +499,62 @@ input:focus {
   -webkit-tap-highlight-color: transparent;
 }
 
+.control-button,
+.attack-button {
+  border-radius: 999px;
+}
+
+.drag-pad {
+  position: relative;
+  width: 138px;
+  height: 138px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at center, rgba(139, 228, 208, 0.2) 0 32%, rgba(28, 43, 58, 0.88) 33%),
+    #142231;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 14px 28px rgba(0, 0, 0, 0.28);
+}
+
+.drag-pad-axis {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 999px;
+  background: rgba(210, 232, 238, 0.22);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.drag-pad-axis.horizontal {
+  width: 76px;
+  height: 3px;
+}
+
+.drag-pad-axis.vertical {
+  width: 3px;
+  height: 76px;
+}
+
+.drag-pad-knob {
+  position: absolute;
+  left: calc(50% - 27px);
+  top: calc(50% - 27px);
+  width: 54px;
+  height: 54px;
+  border: 1px solid rgba(216, 255, 247, 0.5);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.8), rgba(139, 228, 208, 0.28) 34%, transparent 35%),
+    #1f716b;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.32);
+  pointer-events: none;
+}
+
 .control-button:active,
-.attack-button:active {
+.attack-button:active,
+.drag-pad:active {
   border-color: #8be4d0;
   background: #1f716b;
   transform: translateY(1px);
@@ -558,44 +612,34 @@ input:focus {
 
   .mobile-controls {
     display: grid;
-    grid-template-columns: 148px minmax(104px, 1fr);
+    grid-template-columns: 148px minmax(124px, 1fr);
     align-items: end;
     gap: 16px;
+    padding: 0 2px env(safe-area-inset-bottom);
   }
 
-  .d-pad {
+  .action-buttons {
     display: grid;
-    grid-template-columns: repeat(3, 46px);
-    grid-template-rows: repeat(3, 46px);
-    gap: 5px;
-  }
-
-  .control-button {
-    min-width: 46px;
-    min-height: 46px;
-    font-size: 20px;
+    grid-template-columns: 66px 84px;
+    align-items: end;
+    justify-content: end;
+    gap: 12px;
   }
 
   .control-button.jump {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .control-button.left {
-    grid-column: 1;
-    grid-row: 2;
-  }
-
-  .control-button.right {
-    grid-column: 3;
-    grid-row: 2;
+    width: 66px;
+    height: 66px;
+    font-size: 26px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.24);
   }
 
   .attack-button {
-    justify-self: end;
-    width: min(132px, 100%);
-    min-height: 82px;
+    width: 84px;
+    height: 84px;
+    border-color: rgba(255, 202, 117, 0.62);
+    background: #8c3f32;
     font-size: 18px;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -609,23 +653,44 @@ input:focus {
   }
 
   .mobile-controls {
-    grid-template-columns: 132px minmax(88px, 1fr);
+    grid-template-columns: 124px minmax(108px, 1fr);
     gap: 12px;
   }
 
-  .d-pad {
-    grid-template-columns: repeat(3, 40px);
-    grid-template-rows: repeat(3, 40px);
-    gap: 4px;
+  .drag-pad {
+    width: 118px;
+    height: 118px;
   }
 
-  .control-button {
-    min-width: 40px;
-    min-height: 40px;
+  .drag-pad-axis.horizontal {
+    width: 64px;
+  }
+
+  .drag-pad-axis.vertical {
+    height: 64px;
+  }
+
+  .drag-pad-knob {
+    left: calc(50% - 23px);
+    top: calc(50% - 23px);
+    width: 46px;
+    height: 46px;
+  }
+
+  .action-buttons {
+    grid-template-columns: 58px 74px;
+    gap: 10px;
+  }
+
+  .control-button.jump {
+    width: 58px;
+    height: 58px;
+    font-size: 23px;
   }
 
   .attack-button {
-    min-height: 72px;
+    width: 74px;
+    height: 74px;
     font-size: 16px;
   }
 }
