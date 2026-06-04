@@ -115,6 +115,21 @@ export const spriteMap = {
   },
 
   monsters: {
+    slime: {
+      type: 'monster',
+      name: '슬라임',
+      element: 'neutral',
+      src: '/assets/sprites/monsters/slime.png',
+      columns: 1,
+      rows: 1,
+      frameCount: 1,
+      sourceWidth: 64,
+      sourceHeight: 64,
+      frameWidth: 64,
+      frameHeight: 64,
+      renderWidth: 64,
+      renderHeight: 64,
+    },
     blue_dragon_wood: {
       type: 'monster',
       name: '청룡',

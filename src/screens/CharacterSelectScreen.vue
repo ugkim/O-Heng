@@ -1,6 +1,11 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import AvatarRenderer from '../components/AvatarRenderer.vue'
+import {
+  createDefaultAvatarAppearance,
+  createDefaultEquippedAvatar,
+} from '../data/avatarCatalog'
 import { logoutAccount } from '../services/authService'
 import {
   createCharacter,
@@ -71,6 +76,8 @@ async function submitCreate(slotNo) {
       job: 'mage',
       mainElement: 'fire',
       spriteKey: 'novice',
+      appearance: createDefaultAvatarAppearance(),
+      equippedAvatar: createDefaultEquippedAvatar(),
       elements: {
         wood: 0,
         fire: 10,
@@ -107,6 +114,11 @@ function enterGame(character) {
   router.push('/game')
 }
 
+function customizeCharacter(character) {
+  storeSelectedCharacter(character)
+  router.push(`/character/${character.id}/customize`)
+}
+
 function logout() {
   logoutAccount()
   router.replace('/')
@@ -131,6 +143,13 @@ function logout() {
         <p class="slot-number">Slot {{ slot.slotNo }}</p>
 
         <template v-if="slot.character">
+          <div class="slot-avatar">
+            <AvatarRenderer
+              :appearance="slot.character.appearance"
+              :equipped-avatar="slot.character.equipped_avatar"
+              size="small"
+            />
+          </div>
           <h2>{{ slot.character.name }}</h2>
           <dl class="character-stats">
             <div>
@@ -150,6 +169,9 @@ function logout() {
           <div class="button-row">
             <button class="primary-button" type="button" @click="enterGame(slot.character)">
               입장
+            </button>
+            <button class="secondary-button" type="button" @click="customizeCharacter(slot.character)">
+              꾸미기
             </button>
             <button class="danger-button" type="button" @click="removeCharacter(slot.character)">
               삭제

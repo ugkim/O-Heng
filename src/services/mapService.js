@@ -97,11 +97,12 @@ function getLocalMapCatalog() {
     forest_edge: getMapDefinition('forest_edge'),
     [DEFAULT_MAP_KEY]: getMapDefinition(DEFAULT_MAP_KEY),
     forest02: getMapDefinition('forest02'),
+    crystal_peak: getMapDefinition('crystal_peak'),
   }
 }
 
 function sortMapsForTravel(maps) {
-  const preferredOrder = ['first_field', 'forest_edge', 'forest01', 'forest02', 'crystal_cavern']
+  const preferredOrder = ['first_field', 'forest_edge', 'forest01', 'forest02', 'crystal_peak', 'crystal_cavern']
   const orderIndex = new Map(preferredOrder.map((mapKey, index) => [mapKey, index]))
 
   return maps.sort((a, b) => {
@@ -255,6 +256,7 @@ function shouldPlaceMonsterOnMap(mapKey, monster) {
   if (mapKey === 'first_field') return power <= 120
   if (mapKey === 'forest_edge') return power <= 220 && ['neutral', 'wood', 'earth'].includes(element)
   if (mapKey === 'forest02') return power >= 90 || ['wood', 'earth', 'metal', 'neutral'].includes(element)
+  if (mapKey === 'crystal_peak') return power >= 130 || ['water', 'metal', 'earth', 'wood'].includes(element)
   if (mapKey === 'crystal_cavern') return power >= 130 || ['water', 'metal', 'earth'].includes(element)
 
   return true

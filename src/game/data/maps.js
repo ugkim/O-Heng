@@ -2,6 +2,7 @@ export const DEFAULT_MAP_KEY = 'forest01'
 
 export const MAP_BACKGROUND_IMAGES = {
   crystal_cavern: '/assets/backgrounds/cristal-cave01.webp',
+  crystal_peak: '/assets/backgrounds/cristal-cave01.webp',
   first_field: '/assets/backgrounds/village-west01.webp',
   forest_edge: '/assets/backgrounds/wind-forest.webp',
   forest01: '/assets/backgrounds/forest01.webp',
@@ -329,6 +330,16 @@ export const MAP_DEFINITIONS = {
         targetMapId: 'forest01',
         targetSpawnId: 'spawn-right',
       },
+      {
+        id: 'forest02-BR-portal-next',
+        name: '수정 고원',
+        x: 1930,
+        y: 550,
+        width: 44,
+        height: 96,
+        targetMapId: 'crystal_peak',
+        targetSpawnId: 'spawn-left',
+      },
     ],
     spawns: [
       { id: 'spawn-left', x: 130, y: 560 },
@@ -395,6 +406,148 @@ export const MAP_DEFINITIONS = {
       borderColor: '#243f32',
     },
   },
+  crystal_peak: {
+    mapId: 'crystal_peak',
+    mapName: '수정 고원',
+    width: 2200,
+    height: 720,
+    platforms: [
+      { id: 'crystal_peak-BL-ground-01', x: 280, y: 610, width: 560, height: 38 },
+      { id: 'crystal_peak-BC-ground-01', x: 900, y: 610, width: 500, height: 38 },
+      { id: 'crystal_peak-BR-ground-01', x: 1540, y: 610, width: 620, height: 38 },
+      { id: 'crystal_peak-FR-ground-01', x: 2070, y: 610, width: 260, height: 38 },
+      { id: 'crystal_peak-ML-platform-01', x: 460, y: 490, width: 260, height: 24 },
+      { id: 'crystal_peak-MC-platform-01', x: 1010, y: 440, width: 320, height: 24 },
+      { id: 'crystal_peak-MR-platform-01', x: 1530, y: 470, width: 300, height: 24 },
+      { id: 'crystal_peak-TL-platform-01', x: 340, y: 340, width: 220, height: 22 },
+      { id: 'crystal_peak-TC-platform-01', x: 1120, y: 300, width: 270, height: 22 },
+      { id: 'crystal_peak-TR-platform-01', x: 1800, y: 330, width: 260, height: 22 },
+      { id: 'crystal_peak-MC-bridge-01', x: 1260, y: 388, width: 220, height: 18 },
+    ],
+    ladders: [
+      {
+        id: 'crystal_peak-BL-ladder-01',
+        x: 570,
+        y: 490,
+        width: 32,
+        height: 120,
+        from: 'crystal_peak-BL-ground-01',
+        to: 'crystal_peak-ML-platform-01',
+      },
+      {
+        id: 'crystal_peak-MC-ladder-01',
+        x: 1120,
+        y: 300,
+        width: 32,
+        height: 140,
+        from: 'crystal_peak-MC-platform-01',
+        to: 'crystal_peak-TC-platform-01',
+      },
+      {
+        id: 'crystal_peak-BR-ladder-01',
+        x: 1590,
+        y: 470,
+        width: 32,
+        height: 140,
+        from: 'crystal_peak-BR-ground-01',
+        to: 'crystal_peak-MR-platform-01',
+      },
+    ],
+    portals: [
+      {
+        id: 'crystal_peak-BL-portal-prev',
+        name: '바람숲 깊은 길',
+        x: 70,
+        y: 550,
+        width: 44,
+        height: 96,
+        targetMapId: 'forest02',
+        targetSpawnId: 'spawn-right',
+      },
+    ],
+    spawns: [
+      { id: 'spawn-left', x: 140, y: 560 },
+      { id: 'spawn-center', x: 1060, y: 560 },
+      { id: 'spawn-right', x: 2020, y: 560 },
+    ],
+    monsterSpawnAreas: [
+      {
+        id: 'crystal_peak-crystal-slime-01',
+        platformId: 'crystal_peak-BL-ground-01',
+        monsterType: 'crystal_slime',
+        maxCount: 3,
+        spawnChance: 100,
+        spawnRange: { x1: 150, x2: 520 },
+      },
+      {
+        id: 'crystal_peak-crystal-slime-02',
+        platformId: 'crystal_peak-MC-platform-01',
+        monsterType: 'crystal_slime',
+        maxCount: 2,
+        spawnChance: 100,
+        spawnRange: { x1: 880, x2: 1140 },
+      },
+      {
+        id: 'crystal_peak-elder-dragon-01',
+        platformId: 'crystal_peak-BR-ground-01',
+        monsterType: 'elder_blue_dragon',
+        maxCount: 2,
+        spawnChance: 80,
+        spawnRange: { x1: 1300, x2: 1780 },
+      },
+      {
+        id: 'crystal_peak-elder-dragon-02',
+        platformId: 'crystal_peak-TR-platform-01',
+        monsterType: 'elder_blue_dragon',
+        maxCount: 1,
+        spawnChance: 60,
+        spawnRange: { x1: 1710, x2: 1890 },
+      },
+    ],
+    monsterConfig: {
+      crystal_slime: {
+        name: '수정 슬라임',
+        spriteKey: 'slime',
+        hp: 95,
+        attack: 16,
+        defense: 5,
+        exp: 32,
+        element: 'water',
+        radius: 28,
+        moveSpeed: 28,
+        dropItems: [
+          { itemId: 'money', name: '돈', chance: 100, amountMin: 8, amountMax: 14 },
+          { itemId: 'crystal_dust', name: '수정 가루', chance: 35, amountMin: 1, amountMax: 1 },
+        ],
+      },
+      elder_blue_dragon: {
+        name: '심층 청룡',
+        spriteKey: 'blue_dragon_wood',
+        hp: 360,
+        attack: 42,
+        defense: 18,
+        exp: 105,
+        element: 'wood',
+        radius: 32,
+        moveSpeed: 30,
+        attackRange: 72,
+        dropItems: [
+          { itemId: 'money', name: '돈', chance: 100, amountMin: 30, amountMax: 48 },
+          { itemId: 'blue_scale', name: '푸른 비늘', chance: 40, amountMin: 1, amountMax: 2 },
+        ],
+      },
+    },
+    background: {
+      imageUrl: MAP_BACKGROUND_IMAGES.crystal_peak,
+      skyColor: '#16243a',
+      farTreeColor: '#27405f',
+      treeColor: '#1c3150',
+      groundColor: '#192337',
+      platformColor: '#334768',
+      surfaceColor: '#96e8ff',
+      borderColor: '#6bbbd6',
+    },
+  },
 }
 
 export function getMapDefinition(mapKey = DEFAULT_MAP_KEY) {
@@ -438,7 +591,10 @@ export function normalizeMapRow(row) {
 }
 
 export function normalizeMapData(mapData) {
-  const platforms = mapData.platforms || mapData.floorData?.platforms || []
+  const platforms = ensureFullWidthBaseGround(
+    mapData.platforms || mapData.floorData?.platforms || [],
+    mapData.width || 1600,
+  )
   const spawns = mapData.spawns || []
   const spawnPoint = mapData.spawnPoint || spawns[0] || { x: 180, y: 410 }
 
@@ -474,6 +630,39 @@ function normalizePortals(portals) {
     targetMapKey: portal.targetMapKey || portal.targetMapId,
     targetMapId: portal.targetMapId || portal.targetMapKey,
   }))
+}
+
+function ensureFullWidthBaseGround(platforms, mapWidth) {
+  const normalizedPlatforms = Array.isArray(platforms) ? [...platforms] : []
+  const groundPlatforms = normalizedPlatforms.filter((platform) => isBaseGroundPlatform(platform))
+  if (groundPlatforms.length === 0) return normalizedPlatforms
+
+  const baseY = Math.max(...groundPlatforms.map((platform) => platform.y || 0))
+  const baseGrounds = groundPlatforms.filter((platform) => Math.abs((platform.y || 0) - baseY) <= 4)
+  const hasFullWidthGround = baseGrounds.some((platform) => {
+    const left = (platform.x || 0) - (platform.width || 0) / 2
+    const right = (platform.x || 0) + (platform.width || 0) / 2
+    return left <= 0 && right >= mapWidth
+  })
+
+  if (hasFullWidthGround) return normalizedPlatforms
+
+  normalizedPlatforms.push({
+    id: 'auto-full-width-base-ground',
+    x: mapWidth / 2,
+    y: baseY,
+    width: mapWidth,
+    height: Math.max(...baseGrounds.map((platform) => platform.height || 36)),
+  })
+
+  return normalizedPlatforms
+}
+
+function isBaseGroundPlatform(platform) {
+  if (!platform) return false
+
+  const id = platform.id || ''
+  return id.includes('ground') || id.includes('floor') || (platform.height || 0) >= 34
 }
 
 function getNonEmptyArray(value) {

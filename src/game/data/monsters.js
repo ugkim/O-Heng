@@ -13,6 +13,7 @@ export const MONSTER_DEFINITIONS = {
   slime: {
     id: 'slime',
     name: '슬라임',
+    spriteKey: 'slime',
     maxHp: 30,
     exp: 10,
     gold: 0,

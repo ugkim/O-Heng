@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import AvatarRenderer from '../AvatarRenderer.vue'
 import SpriteRenderer from '../SpriteRenderer.vue'
 import { elements } from '../../data/elements'
 import { jobs } from '../../data/jobs'
@@ -38,7 +39,13 @@ const expToNextLevel = computed(() => getExpToNextLevel(props.character.level ||
 <template>
   <div class="stats-panel">
     <div class="stats-hero">
-      <SpriteRenderer v-if="selectedSpriteKey" :sprite-key="selectedSpriteKey" :frame-index="0" />
+      <AvatarRenderer
+        v-if="character.equipped_avatar"
+        :appearance="character.appearance"
+        :equipped-avatar="character.equipped_avatar"
+        size="small"
+      />
+      <SpriteRenderer v-else-if="selectedSpriteKey" :sprite-key="selectedSpriteKey" :frame-index="0" />
       <div>
         <strong>{{ character.name }}</strong>
         <span>{{ jobs[character.job]?.label || character.job }}</span>

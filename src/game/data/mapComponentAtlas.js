@@ -13,6 +13,7 @@ export const MAP_THEME_BY_KEY = {
   forest01: 'wind_forest',
   forest02: 'deep_forest',
   crystal_cavern: 'deep_forest',
+  crystal_peak: 'deep_forest',
 }
 
 export const MAP_THEME_BLOCKS = {

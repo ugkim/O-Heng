@@ -22,6 +22,8 @@ create table if not exists public.characters (
   job text,
   main_element text,
   sprite_key text,
+  appearance jsonb not null default '{"version":1,"bodyScale":1,"direction":"right","action":"stand"}'::jsonb,
+  equipped_avatar jsonb not null default '{"body":"body_light","hair":"hair_black_mop","face":"face_clear","top":"top_green_hoodie","bottom":"bottom_denim","shoes":"shoes_canvas","hat":null,"cape":null,"weapon":null}'::jsonb,
   elements jsonb not null default '{}'::jsonb,
   element_points int not null default 0,
   level int not null default 1,
@@ -45,6 +47,8 @@ alter table public.characters
 add column if not exists job text,
 add column if not exists main_element text,
 add column if not exists sprite_key text,
+add column if not exists appearance jsonb not null default '{"version":1,"bodyScale":1,"direction":"right","action":"stand"}'::jsonb,
+add column if not exists equipped_avatar jsonb not null default '{"body":"body_light","hair":"hair_black_mop","face":"face_clear","top":"top_green_hoodie","bottom":"bottom_denim","shoes":"shoes_canvas","hat":null,"cape":null,"weapon":null}'::jsonb,
 add column if not exists elements jsonb not null default '{}'::jsonb,
 add column if not exists element_points int not null default 0,
 add column if not exists mp int not null default 50,
@@ -954,6 +958,7 @@ $$;
 drop function if exists public.create_character(uuid, int, text);
 drop function if exists public.create_character(uuid, int, text, text, text, text);
 drop function if exists public.create_character(uuid, int, text, text, text, text, jsonb);
+drop function if exists public.create_character(uuid, int, text, text, text, text, jsonb, jsonb, jsonb);
 
 create or replace function public.create_character(
   p_account_id uuid,
@@ -962,7 +967,9 @@ create or replace function public.create_character(
   p_job text default 'mage',
   p_main_element text default 'fire',
   p_sprite_key text default 'novice',
-  p_elements jsonb default '{}'::jsonb
+  p_elements jsonb default '{}'::jsonb,
+  p_appearance jsonb default '{"version":1,"bodyScale":1,"direction":"right","action":"stand"}'::jsonb,
+  p_equipped_avatar jsonb default '{"body":"body_light","hair":"hair_black_mop","face":"face_clear","top":"top_green_hoodie","bottom":"bottom_denim","shoes":"shoes_canvas","hat":null,"cape":null,"weapon":null}'::jsonb
 )
 returns public.characters
 language plpgsql
@@ -989,9 +996,58 @@ begin
     raise exception 'maximum 3 characters per account';
   end if;
 
-  insert into characters (account_id, slot_no, name, job, main_element, sprite_key, elements)
-  values (p_account_id, p_slot_no, trim(p_name), p_job, p_main_element, p_sprite_key, coalesce(p_elements, '{}'::jsonb))
+  insert into characters (
+    account_id,
+    slot_no,
+    name,
+    job,
+    main_element,
+    sprite_key,
+    elements,
+    appearance,
+    equipped_avatar
+  )
+  values (
+    p_account_id,
+    p_slot_no,
+    trim(p_name),
+    p_job,
+    p_main_element,
+    p_sprite_key,
+    coalesce(p_elements, '{}'::jsonb),
+    coalesce(p_appearance, '{"version":1,"bodyScale":1,"direction":"right","action":"stand"}'::jsonb),
+    coalesce(p_equipped_avatar, '{"body":"body_light","hair":"hair_black_mop","face":"face_clear","top":"top_green_hoodie","bottom":"bottom_denim","shoes":"shoes_canvas","hat":null,"cape":null,"weapon":null}'::jsonb)
+  )
   returning * into v_character;
+
+  return v_character;
+end;
+$$;
+
+create or replace function public.update_character_avatar(
+  p_account_id uuid,
+  p_character_id uuid,
+  p_appearance jsonb default '{}'::jsonb,
+  p_equipped_avatar jsonb default '{}'::jsonb
+)
+returns public.characters
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_character characters%rowtype;
+begin
+  update characters
+  set appearance = coalesce(p_appearance, '{}'::jsonb),
+      equipped_avatar = coalesce(p_equipped_avatar, '{}'::jsonb)
+  where id = p_character_id
+    and account_id = p_account_id
+  returning * into v_character;
+
+  if not found then
+    raise exception 'character not found';
+  end if;
 
   return v_character;
 end;
@@ -1121,7 +1177,8 @@ grant execute on function public.login_account(text, text) to anon, authenticate
 grant execute on function public.get_characters(uuid) to anon, authenticated;
 grant execute on function public.get_map(text) to anon, authenticated;
 grant execute on function public.get_maps() to anon, authenticated;
-grant execute on function public.create_character(uuid, int, text, text, text, text, jsonb) to anon, authenticated;
+grant execute on function public.create_character(uuid, int, text, text, text, text, jsonb, jsonb, jsonb) to anon, authenticated;
+grant execute on function public.update_character_avatar(uuid, uuid, jsonb, jsonb) to anon, authenticated;
 grant execute on function public.delete_character(uuid, uuid) to anon, authenticated;
 grant execute on function public.update_character_state(uuid, uuid, int, int, int, int, int, int, int, int, int, int, int) to anon, authenticated;
 grant execute on function public.use_element_point(uuid, uuid, text) to anon, authenticated;

@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import GameView from '../views/GameView.vue'
 import CharacterCreateView from '../views/CharacterCreateView.vue'
+import CharacterCustomizeView from '../views/CharacterCustomizeView.vue'
 import CharacterSelectScreen from '../screens/CharacterSelectScreen.vue'
 import LoginScreen from '../screens/LoginScreen.vue'
 import RegisterScreen from '../screens/RegisterScreen.vue'
@@ -35,6 +36,12 @@ const routes = [
     path: '/character/create',
     name: 'character-create',
     component: CharacterCreateView,
+    meta: { requiresAccount: true },
+  },
+  {
+    path: '/character/:characterId/customize',
+    name: 'character-customize',
+    component: CharacterCustomizeView,
     meta: { requiresAccount: true },
   },
   {

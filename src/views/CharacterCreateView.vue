@@ -2,6 +2,10 @@
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import SpriteRenderer from '../components/SpriteRenderer.vue'
+import {
+  createDefaultAvatarAppearance,
+  createDefaultEquippedAvatar,
+} from '../data/avatarCatalog'
 import { elementKeys, elements } from '../data/elements'
 import { jobKeys, jobs } from '../data/jobs'
 import { getCharacterSpriteKey } from '../data/spriteMap'
@@ -97,6 +101,8 @@ async function createNewCharacter() {
       mainElement: getMainElement(),
       spriteKey: selectedSpriteKey.value || null,
       elements: { ...allocatedElements },
+      appearance: createDefaultAvatarAppearance(),
+      equippedAvatar: createDefaultEquippedAvatar(),
     })
 
     storeSelectedCharacter(character)

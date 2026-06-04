@@ -41,6 +41,8 @@ const PLAYER_VITAL_BAR_HEIGHT = 5
 const PLAYER_VITAL_BAR_GAP = 3
 const MAP_COMPONENT_VISUAL_SCALE = 1.5
 const MAP_LADDER_VISUAL_SCALE = 1
+const FLOATING_TEXT_FONT_FAMILY =
+  '"Showcard Gothic", "Cooper Black", "Arial Black", "Malgun Gothic", sans-serif'
 const MONSTER_COLORS = {
   neutral: 0x66d36e,
   wood: 0x4ed483,
@@ -724,8 +726,8 @@ export default class FieldScene extends Phaser.Scene {
     const maxHp = mapMonsterConfig.hp ?? mapMonsterConfig.maxHp ?? baseMonsterData?.maxHp ?? 30
     const element = mapMonsterConfig.element || baseMonsterData?.element || 'neutral'
     const radius = mapMonsterConfig.radius || 24
-    const spriteKey = mapMonsterConfig.spriteKey || baseMonsterData?.spriteKey
-    const spriteData = spriteKey ? findSprite(spriteKey) : null
+    const spriteKey = mapMonsterConfig.spriteKey || baseMonsterData?.spriteKey || 'slime'
+    const spriteData = findSprite(spriteKey) || findSprite('slime')
     const visual = this.createMonsterVisual(spawnPoint, {
       element,
       radius,
@@ -801,25 +803,28 @@ export default class FieldScene extends Phaser.Scene {
   }
 
   createMonsterVisual(spawnPoint, { element, radius, spriteData, spriteKey }) {
-    if (spriteData && this.textures.exists(this.getMonsterTextureKey(spriteKey))) {
+    const textureKey = this.getMonsterTextureKey(spriteData?.key || spriteKey)
+
+    if (spriteData && this.textures.exists(textureKey)) {
       const monsterSprite = this.add.sprite(
         spawnPoint.x,
         spawnPoint.y + radius,
-        this.getMonsterTextureKey(spriteKey),
+        textureKey,
         0,
       )
       monsterSprite.setOrigin(0.5, 1)
       monsterSprite.setDisplaySize(spriteData.renderWidth || radius * 2, spriteData.renderHeight || radius * 2)
-      monsterSprite.setTint(MONSTER_COLORS[element] || MONSTER_COLORS.neutral)
       return monsterSprite
     }
 
-    return this.add.circle(
+    return this.add.sprite(
       spawnPoint.x,
-      spawnPoint.y,
-      radius,
-      MONSTER_COLORS[element] || MONSTER_COLORS.neutral,
+      spawnPoint.y + radius,
+      this.getMonsterTextureKey('slime'),
+      0,
     )
+      .setOrigin(0.5, 1)
+      .setDisplaySize(radius * 2, radius * 2)
   }
 
   getMonsterPatrolRange(spawnState, spawnPoint, radius) {
@@ -1266,14 +1271,14 @@ export default class FieldScene extends Phaser.Scene {
 
     if (damage > 0) {
       this.playerState.currentHp = Math.max(0, this.playerState.currentHp - damage)
-      this.showFloatingText(this.player.x, this.player.y - 64, `-${damage}`, '#ff6f6f')
+      this.showFloatingText(this.player.x, this.player.y - 64, `-${damage}`, '#ff6f6f', 'playerDamage')
       this.saveCharacterState()
 
       if (this.playerState.currentHp <= 0) {
         this.startPlayerDeath()
       }
     } else {
-      this.showFloatingText(this.player.x, this.player.y - 64, 'BLOCK', '#b8e6ff')
+      this.showFloatingText(this.player.x, this.player.y - 64, 'BLOCK', '#b8e6ff', 'block')
     }
 
     this.startPlayerInvincibility()
@@ -1404,14 +1409,14 @@ export default class FieldScene extends Phaser.Scene {
     const target = findMonsterInRange(this.player, this.monsters, ATTACK_RANGE)
 
     if (!target) {
-      this.showFloatingText(this.player.x, this.player.y - 36, 'MISS', '#c8d3df')
+      this.showFloatingText(this.player.x, this.player.y - 36, 'MISS', '#c8d3df', 'miss')
       this.saveCharacterState()
       return
     }
 
     const result = attackMonster(target, damage)
 
-    this.showFloatingText(target.body.x, target.body.y - 52, `-${result.damage}`, '#ffdf7e')
+    this.showFloatingText(target.body.x, target.body.y - 52, `-${result.damage}`, '#ffdf7e', 'monsterDamage')
     target.hpText.setText(`HP ${Math.max(target.currentHp, 0)}/${target.maxHp}`)
 
     if (result.defeated) {
@@ -1460,20 +1465,21 @@ export default class FieldScene extends Phaser.Scene {
     const levelResult = addExperience(this.playerState, monster.exp)
     const droppedGold = this.rollDroppedGold(monster)
     this.playerState.gold += droppedGold
-    this.showFloatingText(this.player.x, this.player.y - 52, `EXP +${monster.exp}`, '#8cffb2')
+    this.showFloatingText(this.player.x, this.player.y - 52, `EXP +${monster.exp}`, '#8cffb2', 'reward')
 
     if (droppedGold > 0) {
-      this.showFloatingText(this.player.x, this.player.y - 30, `돈 +${droppedGold}`, '#ffd36e')
+      this.showFloatingText(this.player.x, this.player.y - 30, `돈 +${droppedGold}`, '#ffd36e', 'gold')
     }
 
     if (levelResult.leveledUp) {
       this.refreshPlayerStats({ restoreVitals: true })
-      this.showFloatingText(this.player.x, this.player.y - 78, 'LEVEL UP!', '#8fd3ff')
+      this.showFloatingText(this.player.x, this.player.y - 78, 'LEVEL UP!', '#8fd3ff', 'levelUp')
       this.showFloatingText(
         this.player.x,
         this.player.y - 104,
         `오행 +${levelResult.gainedElementPoints}`,
         '#ffd36e',
+        'reward',
       )
     }
 
@@ -1573,23 +1579,129 @@ export default class FieldScene extends Phaser.Scene {
     }
   }
 
-  showFloatingText(x, y, text, color) {
-    // 전투 피드백용 임시 텍스트다. 이후 데미지 숫자 컴포넌트로 분리할 수 있다.
+  showFloatingText(x, y, text, color, variant = 'notice') {
+    const style = this.getFloatingTextStyle(variant, color)
+    const driftX = Phaser.Math.Between(-style.driftX, style.driftX)
     const label = this.add
       .text(x, y, text, {
-        fontFamily: 'Arial',
-        fontSize: '16px',
-        color,
+        fontFamily: FLOATING_TEXT_FONT_FAMILY,
+        fontSize: `${style.fontSize}px`,
+        fontStyle: 'bold',
+        color: style.color,
+        stroke: style.stroke,
+        strokeThickness: style.strokeThickness,
+        shadow: {
+          offsetX: 2,
+          offsetY: 3,
+          color: style.shadow,
+          blur: 1,
+          stroke: true,
+          fill: true,
+        },
       })
       .setOrigin(0.5)
+      .setDepth(140)
+      .setResolution(2)
+      .setScale(style.startScale)
 
     this.tweens.add({
       targets: label,
-      y: y - 28,
+      x: x + driftX,
+      y: y - style.rise,
       alpha: 0,
-      duration: 650,
+      scale: style.endScale,
+      ease: 'Cubic.easeOut',
+      duration: style.duration,
       onComplete: () => label.destroy(),
     })
+  }
+
+  getFloatingTextStyle(variant, color) {
+    const baseStyle = {
+      color,
+      fontSize: 22,
+      stroke: '#18202b',
+      strokeThickness: 5,
+      shadow: '#000000',
+      rise: 42,
+      driftX: 12,
+      duration: 850,
+      startScale: 0.82,
+      endScale: 1.08,
+    }
+
+    const styles = {
+      monsterDamage: {
+        fontSize: 34,
+        stroke: '#4b2108',
+        strokeThickness: 7,
+        shadow: '#120702',
+        rise: 54,
+        driftX: 18,
+        duration: 980,
+        startScale: 0.64,
+        endScale: 1.18,
+      },
+      playerDamage: {
+        fontSize: 32,
+        stroke: '#5a1010',
+        strokeThickness: 7,
+        shadow: '#180303',
+        rise: 48,
+        driftX: 12,
+        duration: 920,
+        startScale: 0.68,
+        endScale: 1.14,
+      },
+      reward: {
+        fontSize: 25,
+        stroke: '#12381f',
+        strokeThickness: 6,
+        shadow: '#04160b',
+        rise: 50,
+        driftX: 10,
+        duration: 1050,
+        startScale: 0.76,
+        endScale: 1.04,
+      },
+      gold: {
+        fontSize: 24,
+        stroke: '#5a3a09',
+        strokeThickness: 6,
+        shadow: '#1d1202',
+        rise: 46,
+        driftX: 10,
+        duration: 1050,
+        startScale: 0.76,
+        endScale: 1.04,
+      },
+      levelUp: {
+        fontSize: 36,
+        stroke: '#123753',
+        strokeThickness: 8,
+        shadow: '#031421',
+        rise: 62,
+        driftX: 6,
+        duration: 1300,
+        startScale: 0.58,
+        endScale: 1.22,
+      },
+      block: {
+        fontSize: 25,
+        stroke: '#153b55',
+        strokeThickness: 6,
+      },
+      miss: {
+        fontSize: 24,
+        stroke: '#2a313b',
+        strokeThickness: 5,
+      },
+    }
+
+    return {
+      ...baseStyle,
+      ...(styles[variant] || {}),
+    }
   }
 
   updateHud() {

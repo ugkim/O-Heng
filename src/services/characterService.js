@@ -17,6 +17,8 @@ export async function createCharacter({
   mainElement = 'fire',
   spriteKey = 'novice',
   elements = {},
+  appearance = null,
+  equippedAvatar = null,
 }) {
   const { data, error } = await requireSupabase()
     .rpc('create_character', {
@@ -27,6 +29,27 @@ export async function createCharacter({
       p_main_element: mainElement,
       p_sprite_key: spriteKey,
       p_elements: elements,
+      p_appearance: appearance,
+      p_equipped_avatar: equippedAvatar,
+    })
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+export async function updateCharacterAvatar({
+  accountId,
+  characterId,
+  appearance = {},
+  equippedAvatar = {},
+}) {
+  const { data, error } = await requireSupabase()
+    .rpc('update_character_avatar', {
+      p_account_id: accountId,
+      p_character_id: characterId,
+      p_appearance: appearance,
+      p_equipped_avatar: equippedAvatar,
     })
     .single()
 

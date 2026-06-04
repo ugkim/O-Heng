@@ -56,6 +56,7 @@ export const activeQuests = [
 export const worldMapRegions = [
   { id: 'forest01', mapKey: 'forest01', name: '바람숲', visited: true, unlocked: true },
   { id: 'forest02', mapKey: 'forest02', name: '청룡계곡', visited: true, unlocked: true },
+  { id: 'crystal_peak', mapKey: 'crystal_peak', name: '수정 고원', visited: false, unlocked: true },
   { id: 'elder_hill', mapKey: 'elder_hill', name: '고목언덕', visited: false, unlocked: false },
   { id: 'black_cave', mapKey: 'black_cave', name: '현무동굴', visited: false, unlocked: false },
 ]

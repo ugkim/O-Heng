@@ -242,6 +242,18 @@ input:focus {
   font-size: 24px;
 }
 
+.slot-avatar {
+  display: grid;
+  place-items: center;
+  min-height: 132px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(139, 228, 208, 0.16);
+  border-radius: 8px;
+  background:
+    linear-gradient(to top, rgba(105, 72, 42, 0.84) 0 22%, transparent 22%),
+    linear-gradient(180deg, rgba(78, 137, 172, 0.78), rgba(109, 177, 125, 0.36));
+}
+
 .character-stats {
   display: grid;
   gap: 10px;
