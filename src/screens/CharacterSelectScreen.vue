@@ -70,7 +70,7 @@ async function submitCreate(slotNo) {
       name,
       job: 'mage',
       mainElement: 'fire',
-      spriteKey: 'mage_fire',
+      spriteKey: 'novice',
       elements: {
         wood: 0,
         fire: 10,

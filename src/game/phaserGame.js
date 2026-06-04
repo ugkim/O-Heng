@@ -14,7 +14,7 @@ export function createPhaserGame(parent, initialMapData = null) {
     backgroundColor: '#192231',
     pixelArt: true,
     scale: {
-      mode: Phaser.Scale.FIT,
+      mode: Phaser.Scale.RESIZE,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
     physics: {

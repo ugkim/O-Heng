@@ -15,7 +15,7 @@ export async function createCharacter({
   name,
   job = 'mage',
   mainElement = 'fire',
-  spriteKey = 'mage_fire',
+  spriteKey = 'novice',
   elements = {},
 }) {
   const { data, error } = await requireSupabase()

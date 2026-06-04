@@ -1,6 +1,54 @@
 export const DEFAULT_MAP_KEY = 'forest01'
 
+export const MAP_BACKGROUND_IMAGES = {
+  crystal_cavern: '/assets/backgrounds/cristal-cave01.webp',
+  first_field: '/assets/backgrounds/village-west01.webp',
+  forest_edge: '/assets/backgrounds/wind-forest.webp',
+  forest01: '/assets/backgrounds/forest01.webp',
+  forest02: '/assets/backgrounds/forest02.jpg',
+  village02: '/assets/backgrounds/village02.webp',
+}
+
 export const MAP_DEFINITIONS = {
+  village02: {
+    mapId: 'village02',
+    mapName: '푸른 지붕 마을',
+    width: 1600,
+    height: 540,
+    platforms: [
+      { id: 'village02-ground-01', x: 400, y: 468, width: 800, height: 36 },
+      { id: 'village02-ground-02', x: 1120, y: 468, width: 520, height: 36 },
+      { id: 'village02-market-01', x: 760, y: 386, width: 240, height: 24 },
+    ],
+    portals: [
+      {
+        id: 'village02-east-portal',
+        name: '숲의 입구',
+        x: 1510,
+        y: 410,
+        width: 44,
+        height: 96,
+        targetMapId: 'forest_edge',
+        targetSpawnId: 'spawn-left',
+      },
+    ],
+    spawns: [
+      { id: 'spawn-left', x: 180, y: 400 },
+      { id: 'spawn-center', x: 760, y: 400 },
+      { id: 'spawn-right', x: 1400, y: 400 },
+    ],
+    monsterSpawnAreas: [],
+    monsterConfig: {},
+    background: {
+      imageUrl: MAP_BACKGROUND_IMAGES.village02,
+      skyColor: '#203d58',
+      farTreeColor: '#2f5b63',
+      nearTreeColor: '#456b50',
+      platformColor: '#76583a',
+      surfaceColor: '#d2b06d',
+      borderColor: '#8fc7d0',
+    },
+  },
   forest01: {
     mapId: 'forest01',
     mapName: '바람숲 입구',
@@ -51,11 +99,12 @@ export const MAP_DEFINITIONS = {
     portals: [
       {
         id: 'forest01-BL-portal-prev',
+        name: '숲의 입구',
         x: 60,
         y: 550,
         width: 44,
         height: 96,
-        targetMapId: 'town01',
+        targetMapId: 'forest_edge',
         targetSpawnId: 'spawn-right',
       },
       {
@@ -122,6 +171,7 @@ export const MAP_DEFINITIONS = {
       },
     },
     background: {
+      imageUrl: MAP_BACKGROUND_IMAGES.forest01,
       skyColor: '#8ecae6',
       farTreeColor: '#2f6f58',
       treeColor: '#1f5a43',
@@ -129,6 +179,96 @@ export const MAP_DEFINITIONS = {
       platformColor: '#6b4a2e',
       surfaceColor: '#7ac943',
       borderColor: '#284a34',
+    },
+  },
+  forest_edge: {
+    mapId: 'forest_edge',
+    mapName: '숲의 입구',
+    width: 1800,
+    height: 540,
+    platforms: [
+      { id: 'forest_edge-ground-01', x: 240, y: 468, width: 480, height: 36 },
+      { id: 'forest_edge-ground-02', x: 760, y: 468, width: 360, height: 36 },
+      { id: 'forest_edge-ground-03', x: 1240, y: 468, width: 520, height: 36 },
+      { id: 'forest_edge-ground-04', x: 1660, y: 468, width: 260, height: 36 },
+      { id: 'forest_edge-branch-01', x: 470, y: 380, width: 210, height: 24 },
+      { id: 'forest_edge-branch-02', x: 920, y: 338, width: 240, height: 24 },
+      { id: 'forest_edge-branch-03', x: 1350, y: 292, width: 220, height: 24 },
+    ],
+    portals: [
+      {
+        id: 'forest_edge-BR-portal-next',
+        name: '바람숲 입구',
+        x: 1740,
+        y: 424,
+        width: 44,
+        height: 96,
+        targetMapId: 'forest01',
+        targetSpawnId: 'spawn-left',
+      },
+    ],
+    spawns: [
+      { id: 'spawn-left', x: 140, y: 400 },
+      { id: 'spawn-center', x: 900, y: 400 },
+      { id: 'spawn-right', x: 1660, y: 400 },
+    ],
+    monsterSpawnAreas: [
+      {
+        id: 'forest_edge-BL-mob-01',
+        platformId: 'forest_edge-ground-01',
+        monsterType: 'slime',
+        maxCount: 4,
+        spawnChance: 100,
+        spawnRange: { x1: 120, x2: 420 },
+      },
+      {
+        id: 'forest_edge-MC-mob-01',
+        platformId: 'forest_edge-ground-03',
+        monsterType: 'slime',
+        maxCount: 3,
+        spawnChance: 100,
+        spawnRange: { x1: 1030, x2: 1450 },
+      },
+      {
+        id: 'forest_edge-TR-mob-01',
+        platformId: 'forest_edge-branch-03',
+        monsterType: 'blue_dragon_wood',
+        maxCount: 1,
+        spawnChance: 20,
+        spawnRange: { x1: 1280, x2: 1420 },
+      },
+    ],
+    monsterConfig: {
+      slime: {
+        hp: 35,
+        attack: 6,
+        defense: 1,
+        exp: 12,
+        element: 'neutral',
+        dropItems: [
+          { itemId: 'money', name: '돈', chance: 100, amountMin: 2, amountMax: 5 },
+        ],
+      },
+      blue_dragon_wood: {
+        hp: 160,
+        attack: 20,
+        defense: 9,
+        exp: 40,
+        element: 'wood',
+        dropItems: [
+          { itemId: 'money', name: '돈', chance: 100, amountMin: 10, amountMax: 18 },
+        ],
+      },
+    },
+    background: {
+      imageUrl: MAP_BACKGROUND_IMAGES.forest_edge,
+      skyColor: '#183044',
+      farTreeColor: '#24546a',
+      treeColor: '#174736',
+      groundColor: '#172417',
+      platformColor: '#31513b',
+      surfaceColor: '#9ee08f',
+      borderColor: '#7cc6a6',
     },
   },
   forest02: {
@@ -245,6 +385,7 @@ export const MAP_DEFINITIONS = {
       },
     },
     background: {
+      imageUrl: MAP_BACKGROUND_IMAGES.forest02,
       skyColor: '#5f93b8',
       farTreeColor: '#24546a',
       treeColor: '#174736',
@@ -262,21 +403,37 @@ export function getMapDefinition(mapKey = DEFAULT_MAP_KEY) {
 
 export function normalizeMapRow(row) {
   if (!row) return getMapDefinition()
+  const mapKey = row.map_id || row.map_key
+  const localMap = MAP_DEFINITIONS[mapKey] || {}
+  const background = row.background || {}
+  const platforms = getNonEmptyArray(row.platforms) || row.floor_data?.platforms
+  const spawns = getNonEmptyArray(row.spawns)
+  const monsterSpawnAreas = getNonEmptyArray(row.monster_spawn_areas)
 
   return normalizeMapData({
     id: row.id,
-    mapId: row.map_id || row.map_key,
+    mapId: mapKey,
     mapName: row.map_name || row.name,
     width: row.width,
     height: row.height,
-    platforms: row.platforms || row.floor_data?.platforms,
+    platforms,
     ladders: row.ladders,
     portals: row.portals,
-    spawns: row.spawns,
-    monsterSpawnAreas: row.monster_spawn_areas,
+    spawns,
+    monsterSpawnAreas,
     monsterConfig: row.monster_config,
     spawnPoint: row.spawn_point,
-    background: row.background,
+    background: {
+      ...(localMap.background || {}),
+      ...background,
+      imageUrl:
+        background.imageUrl ||
+        background.image_url ||
+        row.background_url ||
+        row.backgroundImageUrl ||
+        MAP_BACKGROUND_IMAGES[mapKey] ||
+        localMap.background?.imageUrl,
+    },
   })
 }
 
@@ -301,7 +458,13 @@ export function normalizeMapData(mapData) {
     spawns,
     monsterSpawnAreas: mapData.monsterSpawnAreas || [],
     monsterConfig: mapData.monsterConfig || {},
-    background: mapData.background || {},
+    background: {
+      ...(mapData.background || {}),
+      imageUrl:
+        mapData.background?.imageUrl ||
+        mapData.background?.image_url ||
+        MAP_BACKGROUND_IMAGES[mapData.mapId || mapData.mapKey],
+    },
   }
 }
 
@@ -311,4 +474,8 @@ function normalizePortals(portals) {
     targetMapKey: portal.targetMapKey || portal.targetMapId,
     targetMapId: portal.targetMapId || portal.targetMapKey,
   }))
+}
+
+function getNonEmptyArray(value) {
+  return Array.isArray(value) && value.length > 0 ? value : null
 }

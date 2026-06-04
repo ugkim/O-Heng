@@ -2,6 +2,7 @@ import { requireSupabase } from '../lib/supabaseClient'
 import { DEFAULT_MAP_KEY, getMapDefinition, normalizeMapRow } from '../game/data/maps'
 
 let monsterCatalogPromise = null
+let mapCatalogPromise = null
 
 export async function fetchMapByKey(mapKey = DEFAULT_MAP_KEY) {
   const supabase = requireSupabase()
@@ -15,8 +16,14 @@ export async function fetchMapByKey(mapKey = DEFAULT_MAP_KEY) {
 
   const mapData = data?.map_key || data?.map_id ? normalizeMapRow(data) : getMapDefinition(mapKey)
   const monsterCatalog = await fetchMonsterCatalog(supabase)
+  const mapCatalog = await fetchMapCatalog(supabase)
 
-  return addDatabaseMonstersToMap(mapData, monsterCatalog)
+  return addDatabaseMonstersToMap(addConnectedPortalsToMap(mapData, mapCatalog), monsterCatalog)
+}
+
+export async function fetchAvailableMaps() {
+  const supabase = requireSupabase()
+  return fetchMapCatalog(supabase)
 }
 
 async function fetchMonsterCatalog(supabase) {
@@ -35,6 +42,139 @@ async function fetchMonsterCatalog(supabase) {
   }
 
   return monsterCatalogPromise
+}
+
+async function fetchMapCatalog(supabase) {
+  if (!mapCatalogPromise) {
+    mapCatalogPromise = fetchMapRows(supabase).then((rows) => {
+      const normalizedRows = rows
+        .map((row) => normalizeMapRow(row))
+        .filter((map) => map.mapKey)
+
+      if (normalizedRows.length === 0) {
+        return Object.keys(getLocalMapCatalog()).map((mapKey) => getMapDefinition(mapKey))
+      }
+
+      const mapsByKey = new Map()
+      normalizedRows.forEach((map) => mapsByKey.set(map.mapKey, map))
+
+      Object.values(getLocalMapCatalog()).forEach((map) => {
+        if (!mapsByKey.has(map.mapKey)) {
+          mapsByKey.set(map.mapKey, map)
+        }
+      })
+
+      return sortMapsForTravel([...mapsByKey.values()])
+    })
+  }
+
+  return mapCatalogPromise
+}
+
+async function fetchMapRows(supabase) {
+  const rpcResult = await supabase.rpc('get_maps')
+  if (!rpcResult.error && Array.isArray(rpcResult.data)) {
+    return rpcResult.data
+  }
+
+  const tableResult = await supabase
+    .from('map')
+    .select(
+      'id,map_key,map_id,name,map_name,width,height,spawn_point,floor_data,platforms,ladders,portals,spawns,monster_spawn_areas,monster_config,background,background_url',
+    )
+    .order('map_key')
+
+  if (tableResult.error) {
+    console.error('맵 목록 로딩 실패:', rpcResult.error || tableResult.error)
+    return []
+  }
+
+  return Array.isArray(tableResult.data) ? tableResult.data : []
+}
+
+function getLocalMapCatalog() {
+  return {
+    forest_edge: getMapDefinition('forest_edge'),
+    [DEFAULT_MAP_KEY]: getMapDefinition(DEFAULT_MAP_KEY),
+    forest02: getMapDefinition('forest02'),
+  }
+}
+
+function sortMapsForTravel(maps) {
+  const preferredOrder = ['first_field', 'forest_edge', 'forest01', 'forest02', 'crystal_cavern']
+  const orderIndex = new Map(preferredOrder.map((mapKey, index) => [mapKey, index]))
+
+  return maps.sort((a, b) => {
+    const aOrder = orderIndex.has(a.mapKey) ? orderIndex.get(a.mapKey) : Number.MAX_SAFE_INTEGER
+    const bOrder = orderIndex.has(b.mapKey) ? orderIndex.get(b.mapKey) : Number.MAX_SAFE_INTEGER
+
+    if (aOrder !== bOrder) return aOrder - bOrder
+    return String(a.mapKey).localeCompare(String(b.mapKey))
+  })
+}
+
+function addConnectedPortalsToMap(mapData, mapCatalog) {
+  if (!mapData?.mapKey || !Array.isArray(mapCatalog) || mapCatalog.length <= 1) return mapData
+
+  const knownMapKeys = new Set(mapCatalog.map((map) => map.mapKey))
+  const mapIndex = mapCatalog.findIndex((map) => map.mapKey === mapData.mapKey)
+  if (mapIndex < 0) return mapData
+
+  const portals = (mapData.portals || []).filter((portal) =>
+    knownMapKeys.has(portal.targetMapKey || portal.targetMapId),
+  )
+  const existingTargets = new Set(portals.map((portal) => portal.targetMapKey || portal.targetMapId))
+  const previousMap = mapCatalog[mapIndex - 1]
+  const nextMap = mapCatalog[mapIndex + 1]
+
+  if (previousMap && !existingTargets.has(previousMap.mapKey)) {
+    portals.unshift(createTravelPortal(mapData, previousMap, 'prev'))
+  }
+
+  if (nextMap && !existingTargets.has(nextMap.mapKey)) {
+    portals.push(createTravelPortal(mapData, nextMap, 'next'))
+  }
+
+  return {
+    ...mapData,
+    portals,
+  }
+}
+
+function createTravelPortal(sourceMap, targetMap, direction) {
+  const isPrevious = direction === 'prev'
+  const spawn = getDirectionalSpawn(targetMap, isPrevious ? 'right' : 'left')
+  const portalHeight = sourceMap.height >= 700 ? 96 : 88
+  const portalWidth = 44
+  const x = isPrevious ? 64 : Math.max(64, (sourceMap.width || 1600) - 64)
+  const y = sourceMap.height >= 700 ? 550 : Math.max(portalHeight / 2, (sourceMap.height || 540) - 118)
+
+  return {
+    id: `${sourceMap.mapKey}-auto-portal-${direction}`,
+    name: targetMap.mapName || targetMap.name || targetMap.mapKey,
+    x,
+    y,
+    width: portalWidth,
+    height: portalHeight,
+    targetMapKey: targetMap.mapKey,
+    targetMapId: targetMap.mapKey,
+    targetSpawnId: spawn.id,
+    targetSpawnPoint: { x: spawn.x, y: spawn.y },
+  }
+}
+
+function getDirectionalSpawn(mapData, direction) {
+  const namedSpawn = mapData.spawns?.find((spawn) => spawn.id === `spawn-${direction}`)
+  if (namedSpawn) return namedSpawn
+
+  if (mapData.spawnPoint?.x != null && mapData.spawnPoint?.y != null) {
+    return mapData.spawnPoint
+  }
+
+  return {
+    x: direction === 'right' ? Math.max(140, (mapData.width || 1600) - 140) : 140,
+    y: Math.max(300, (mapData.height || 540) - 130),
+  }
 }
 
 function addDatabaseMonstersToMap(mapData, monsterCatalog) {

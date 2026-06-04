@@ -17,8 +17,8 @@ export function createInitialPlayerState(character = null) {
     defense: stats.defense,
     dex: stats.dex,
     maxHp: stats.maxHp,
-    currentHp: Math.min(character?.hp || stats.maxHp, stats.maxHp),
+    currentHp: Math.min(character?.hp ?? stats.maxHp, stats.maxHp),
     maxMp: stats.maxMp,
-    currentMp: Math.min(character?.mp || stats.maxMp, stats.maxMp),
+    currentMp: Math.min(character?.mp ?? stats.maxMp, stats.maxMp),
   }
 }
