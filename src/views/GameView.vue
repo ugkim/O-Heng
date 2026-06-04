@@ -110,6 +110,10 @@ function attack() {
   sendGameControl("attack", "attack");
 }
 
+function skill() {
+  sendGameControl("skill", "skill");
+}
+
 function returnToTown() {
   window.dispatchEvent(new CustomEvent("rpg-return-town"));
 }
@@ -571,6 +575,14 @@ onBeforeUnmount(() => {
             @pointerdown.prevent="attack"
           >
             ATK
+          </button>
+          <button
+            class="skill-button"
+            type="button"
+            aria-label="스킬"
+            @pointerdown.prevent="skill"
+          >
+            SKILL
           </button>
         </div>
       </div>

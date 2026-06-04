@@ -1228,6 +1228,7 @@ input:focus {
 
 .control-button,
 .attack-button,
+.skill-button,
 .drag-pad {
   border: 1px solid #48677f;
   color: #ffffff;
@@ -1240,7 +1241,8 @@ input:focus {
 }
 
 .control-button,
-.attack-button {
+.attack-button,
+.skill-button {
   border-radius: 999px;
 }
 
@@ -1303,6 +1305,7 @@ input:focus {
 
 .control-button:active,
 .attack-button:active,
+.skill-button:active,
 .drag-pad:active {
   border-color: #8be4d0;
   background: #1f716b;
@@ -1426,19 +1429,24 @@ input:focus {
 
   .drag-pad,
   .control-button,
-  .attack-button {
+  .attack-button,
+  .skill-button {
     pointer-events: auto;
   }
 
   .action-buttons {
     display: grid;
     grid-template-columns: 66px 84px;
+    grid-template-areas:
+      "jump attack"
+      "skill skill";
     align-items: end;
     justify-content: end;
     gap: 12px;
   }
 
   .control-button.jump {
+    grid-area: jump;
     width: 66px;
     height: 66px;
     font-size: 26px;
@@ -1446,12 +1454,24 @@ input:focus {
   }
 
   .attack-button {
+    grid-area: attack;
     width: 84px;
     height: 84px;
     border-color: rgba(255, 202, 117, 0.62);
     background: #8c3f32;
     font-size: 18px;
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  .skill-button {
+    grid-area: skill;
+    justify-self: end;
+    width: 118px;
+    height: 48px;
+    border-color: rgba(143, 211, 255, 0.68);
+    background: #25547a;
+    font-size: 15px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.28);
   }
 }
 
@@ -1504,5 +1524,11 @@ input:focus {
     width: 74px;
     height: 74px;
     font-size: 16px;
+  }
+
+  .skill-button {
+    width: 104px;
+    height: 44px;
+    font-size: 14px;
   }
 }

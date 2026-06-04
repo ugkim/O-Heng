@@ -851,6 +851,7 @@ export default class FieldScene extends Phaser.Scene {
       left: Phaser.Input.Keyboard.KeyCodes.A,
       right: Phaser.Input.Keyboard.KeyCodes.D,
       jump: Phaser.Input.Keyboard.KeyCodes.SPACE,
+      skill: Phaser.Input.Keyboard.KeyCodes.X,
     })
 
     this.input.on('pointerdown', (pointer) => {
@@ -875,6 +876,11 @@ export default class FieldScene extends Phaser.Scene {
 
       if (type === 'attack') {
         this.handleAttack()
+        return
+      }
+
+      if (type === 'skill') {
+        this.handleSkill()
         return
       }
 
@@ -981,9 +987,14 @@ export default class FieldScene extends Phaser.Scene {
     const left = this.cursors.left.isDown || this.keys.left.isDown || this.virtualInput.left
     const right = this.cursors.right.isDown || this.keys.right.isDown || this.virtualInput.right
     const jumpPressed = Phaser.Input.Keyboard.JustDown(this.keys.jump) || this.virtualInput.jumpQueued
+    const skillPressed = Phaser.Input.Keyboard.JustDown(this.keys.skill)
     const onGround = body.blocked.down || body.touching.down
 
     this.virtualInput.jumpQueued = false
+
+    if (skillPressed) {
+      this.handleSkill()
+    }
 
     const currentLadder = this.findCurrentLadder()
     if ((up || down) && currentLadder) {
@@ -1370,13 +1381,25 @@ export default class FieldScene extends Phaser.Scene {
 
   handleAttack() {
     if (this.isPlayerDead) return
+    this.performPlayerAttack({ animationName: 'attack', damage: this.playerState.attack })
+  }
+
+  handleSkill() {
+    if (this.isPlayerDead) return
     if (this.playerState.currentMp < SKILL_MANA_COST) {
       this.showFloatingText(this.player.x, this.player.y - 46, 'MP 부족', '#8fd3ff')
       return
     }
 
     this.playerState.currentMp = Math.max(0, this.playerState.currentMp - SKILL_MANA_COST)
-    this.playAttackAnimation()
+    this.performPlayerAttack({
+      animationName: this.hasAnimation('skill1') ? 'skill1' : 'attack',
+      damage: Math.ceil(this.playerState.attack * 1.35),
+    })
+  }
+
+  performPlayerAttack({ animationName, damage }) {
+    this.playAttackAnimation(animationName)
 
     const target = findMonsterInRange(this.player, this.monsters, ATTACK_RANGE)
 
@@ -1386,7 +1409,7 @@ export default class FieldScene extends Phaser.Scene {
       return
     }
 
-    const result = attackMonster(target, this.playerState.attack)
+    const result = attackMonster(target, damage)
 
     this.showFloatingText(target.body.x, target.body.y - 52, `-${result.damage}`, '#ffdf7e')
     target.hpText.setText(`HP ${Math.max(target.currentHp, 0)}/${target.maxHp}`)
@@ -1398,11 +1421,11 @@ export default class FieldScene extends Phaser.Scene {
     }
   }
 
-  playAttackAnimation() {
+  playAttackAnimation(animationName = 'attack') {
     this.isPlayerAttacking = true
-    const animationName = this.hasAnimation('skill1') ? 'skill1' : 'attack'
-    this.playPlayerAnimation(animationName)
-    const attackFrameCount = Math.max(1, this.getAnimationFrames(animationName).length)
+    const resolvedAnimationName = this.hasAnimation(animationName) ? animationName : 'attack'
+    this.playPlayerAnimation(resolvedAnimationName)
+    const attackFrameCount = Math.max(1, this.getAnimationFrames(resolvedAnimationName).length)
     const attackDuration = Math.max(280, Math.ceil((attackFrameCount / 12) * 1000))
 
     this.time.delayedCall(attackDuration, () => {
